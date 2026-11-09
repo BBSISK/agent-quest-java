@@ -41,4 +41,11 @@ One request to Amazon Nova 2 Lite through the Converse API: a system prompt, one
 - First bug: `ClassNotFoundException`, because I'd saved the class under `src/main/quest` instead of `src/main/java/quest`. Maven only compiles code under `src/main/java`.
 ## Run it
 
+
+### Step 3: tools and the agentic loop (done)
+- `ToolBox` describes the 4 tools to the model as JSON schemas, and `run(name, input)` dispatches a request to my Java code. An unknown tool name returns a message rather than throwing, because a model can invent names.
+- `Agent.ask` is the loop: send the conversation; if the stop reason is `tool_use`, run every requested tool, send the results back in one message, matched by `toolUseId`, and ask again; stop at the first real answer, or after 8 rounds.
+- `ModelClient` is a one-method interface, so 10 tests run the loop against a scripted fake model: no AWS, no cost, the same result every time. They check the toolUseId link, that history carries over, and the round limit.
+- My bug: I first sent tool results back as plain text. That loses the toolUseId link, so Bedrock would see the player talking rather than the tool answering. The test caught it before it reached AWS.
+
 Java 21 and Maven. `mvn test` runs the tool tests, no AWS needed. From Step 2, Bedrock calls use my `ask-barry` AWS profile, which assumes a least-privilege role allowed to call only two models in the EU (Nova 2 Lite and Claude Haiku 4.5). No keys are in the code.
