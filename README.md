@@ -48,4 +48,9 @@ One request to Amazon Nova 2 Lite through the Converse API: a system prompt, one
 - `ModelClient` is a one-method interface, so 10 tests run the loop against a scripted fake model: no AWS, no cost, the same result every time. They check the toolUseId link, that history carries over, and the round limit.
 - My bug: I first sent tool results back as plain text. That loses the toolUseId link, so Bedrock would see the player talking rather than the tool answering. The test caught it before it reached AWS.
 
+### Step 4: playing the game (done)
+A chat loop over the agent, printing every tool call under each answer, and a token counter written as a lambda around the real model call (the `ModelClient` interface made that a two-line change).
+
+What the tool log caught: in an arm-wrestling bet, Nova 2 Lite rolled the dice correctly, then told the player "Gold: 15" without ever calling `update_player_state`, and it invented the opponent's strength bonus instead of looking up the rule. The narration and the real game state drifted apart. Lesson: an agent can say it did something without doing it; trust the tool log, not the text. Step 5 tests whether a stricter prompt or a different model fixes it.
+
 Java 21 and Maven. `mvn test` runs the tool tests, no AWS needed. From Step 2, Bedrock calls use my `ask-barry` AWS profile, which assumes a least-privilege role allowed to call only two models in the EU (Nova 2 Lite and Claude Haiku 4.5). No keys are in the code.
