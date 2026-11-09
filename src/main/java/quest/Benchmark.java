@@ -16,7 +16,8 @@ import software.amazon.awssdk.services.bedrockruntime.model.ConverseResponse;
  * judged only from the tool log (what ran), never from the narration (what it says).
  *
  * Run:  mvn -q compile exec:java -Dexec.mainClass=quest.Benchmark
- *       mvn -q compile exec:java -Dexec.mainClass=quest.Benchmark -Dexec.args="3"     (runs per model, default 3)
+ *       mvn -q compile exec:java -Dexec.mainClass=quest.Benchmark -Dexec.args="3"            (runs per model, default 3)
+ *       mvn -q compile exec:java -Dexec.mainClass=quest.Benchmark -Dexec.args="3 baseline"   (without the Step 5 rule)
  */
 public class Benchmark {
 
@@ -39,6 +40,10 @@ public class Benchmark {
 
     public static void main(String[] args) {
         int runs = args.length > 0 ? Integer.parseInt(args[0]) : 3;
+        // "baseline" = the prompt WITHOUT the Step 5 rule, to measure what the rule changed
+        boolean baseline = args.length > 1 && args[1].equals("baseline");
+        String prompt = baseline ? withoutRule(GameMaster.SYSTEM_PROMPT) : GameMaster.SYSTEM_PROMPT;
+        System.out.println(baseline ? "Prompt: baseline (without the update_player_state rule)" : "Prompt: current");
         try (BedrockRuntimeClient bedrock = BedrockRuntimeClient.builder()
                 .region(Region.EU_WEST_1)
                 .credentialsProvider(ProfileCredentialsProvider.create("ask-barry"))
@@ -58,7 +63,7 @@ public class Benchmark {
                 long millis = 0;
                 System.out.println("\n=== " + name + " (" + MODELS.get(name) + ") ===");
                 for (int run = 1; run <= runs; run++) {
-                    Agent agent = new Agent(model, MODELS.get(name), GameMaster.SYSTEM_PROMPT, ToolBox.standard());
+                    Agent agent = new Agent(model, MODELS.get(name), prompt, ToolBox.standard());
                     StringBuilder line = new StringBuilder("run " + run + ":");
                     for (Turn turn : SCRIPT) {
                         int before = agent.toolLog().size();
@@ -91,6 +96,17 @@ public class Benchmark {
             System.out.println("|---|---|---|---|---|");
             summary.forEach(System.out::println);
         }
+    }
+
+    /** The system prompt with the "Never say ... unless you called update_player_state" line taken out. */
+    static String withoutRule(String prompt) {
+        StringBuilder kept = new StringBuilder();
+        for (String line : prompt.split("\n")) {
+            if (!line.contains("Never say")) {
+                kept.append(line).append("\n");
+            }
+        }
+        return kept.toString().strip();
     }
 
     /** True if any log line in this turn is a call to {@code tool}. Log lines look like "roll_dice {...} -> ...". */

@@ -11,6 +11,8 @@
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- the class "mvn exec:java" runs; override with -Dexec.mainClass=quest.Benchmark -->
+    <exec.mainClass>quest.GameMaster</exec.mainClass>
   </properties>
 
   <dependencyManagement>
@@ -56,7 +58,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.5.0</version>
         <configuration>
-          <mainClass>quest.GameMaster</mainClass>
+          <mainClass>${exec.mainClass}</mainClass>
         </configuration>
       </plugin>
     </plugins>

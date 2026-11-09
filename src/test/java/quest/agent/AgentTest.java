@@ -116,4 +116,16 @@ class AgentTest {
         assertEquals(Agent.MAX_ROUNDS, model.requests.size());
         assertTrue(out.contains("stopped after " + Agent.MAX_ROUNDS), out);
     }
+
+    @Test
+    @DisplayName("an empty reply from the model never goes into history (Bedrock refuses empty messages)")
+    void emptyReplyIsNotSentBack() {
+        ScriptedModel model = new ScriptedModel(List.of(response(StopReason.END_TURN), answer("Two.")));
+        Agent agent = agent(model);
+        assertNotNull(agent.ask("first"));
+        agent.ask("second");
+        for (Message message : model.requests.get(1).messages()) {
+            assertTrue(!message.content().isEmpty(), "a " + message.role() + " message with no content was sent");
+        }
+    }
 }
