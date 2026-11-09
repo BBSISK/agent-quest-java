@@ -1,0 +1,20 @@
+# Agent Quest rule book
+
+## Skill checks
+Roll a d20 and add the relevant modifier (strength for feats of strength).
+15 or higher succeeds. A natural 20 always succeeds; a natural 1 always fails.
+
+## Combat
+Attacker rolls a d20 + strength. 12 or higher hits.
+A rusty sword deals 1d6 damage; unarmed deals 1d3. Enemies act after the player each round.
+Goblins have 7 HP and deal 1d4 damage on a hit.
+
+## Magic
+Each spell uses one spell slot. With no slots left, the spell fails.
+Fireball: 3d6 fire damage to every enemy in a small area.
+Healing word: restore 1d8 HP.
+A full night's rest at an inn restores all spell slots and HP.
+
+## Tavern
+Ale costs 1 gold. A room for the night costs 5 gold.
+Arm wrestling: both sides roll d20 + strength; higher total wins. A friendly wager is up to 5 gold.
