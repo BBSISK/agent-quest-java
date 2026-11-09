@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.bedrockruntime.model.ConverseResponse;
 
 public class GameMaster {
 
-    static final String MODEL_ID = "eu.amazon.nova-2-lite-v1:0";
+    static final String MODEL_ID = "eu.anthropic.claude-haiku-4-5-20251001-v1:0";   // Step 5: Haiku recorded every state change, Nova none
 
     static final String SYSTEM_PROMPT = """
             You are a dramatic and entertaining tabletop RPG games master.

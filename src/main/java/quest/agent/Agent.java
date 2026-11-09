@@ -74,6 +74,12 @@ public class Agent {
         for (int round = 1; round <= MAX_ROUNDS; round++) {
             ConverseResponse response = model.converse(request());
             Message reply = response.output().message();
+            if (reply.content().isEmpty()) {
+                reply = Message.builder()
+                        .role(ConversationRole.ASSISTANT)
+                        .content(ContentBlock.fromText("(The games master pauses.)"))
+                        .build();
+            }
             history.add(reply); // always keep the model's turn
 
             if (response.stopReason() != StopReason.TOOL_USE) {
