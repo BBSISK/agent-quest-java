@@ -4,7 +4,7 @@ An AI agent written in plain Java: a tabletop RPG games master that rolls dice, 
 
 It follows the idea of AWS's "Build your first AI agent" tutorial (Mike Chambers, which uses the Python Strands Agents SDK), but in Java and **without an agent framework**: I write the agentic loop myself on the AWS SDK for Java's Converse API, so every step the framework would hide is visible.
 
-**Status:** in progress (Step 2 of 5).
+**Status:** in progress (Step 3 of 5).
 
 ## What makes it an agent
 
@@ -33,6 +33,12 @@ Three plain Java classes the model will be able to call, with 13 JUnit tests wri
 
 What I got wrong first: my gold rule subtracted before checking, so a failed purchase wiped the player's gold. Fixed by validating before changing anything: refuse the transaction rather than half-do it.
 
+
+### Step 2: first call to Bedrock (done)
+One request to Amazon Nova 2 Lite through the Converse API: a system prompt, one user message, the reply and its stop reason (`end_turn`) and token counts (82 in, 249 out).
+- Credentials come from my `ask-barry` AWS profile, which assumes a role allowed to call only two EU models. Nothing secret is in the code.
+- A new laptop had no AWS profile at all (`ProfileFile(sections=[])`): credentials belong to the machine, not the repo. I gave the new Mac its own access key and rebuilt the role profile.
+- First bug: `ClassNotFoundException`, because I'd saved the class under `src/main/quest` instead of `src/main/java/quest`. Maven only compiles code under `src/main/java`.
 ## Run it
 
 Java 21 and Maven. `mvn test` runs the tool tests, no AWS needed. From Step 2, Bedrock calls use my `ask-barry` AWS profile, which assumes a least-privilege role allowed to call only two models in the EU (Nova 2 Lite and Claude Haiku 4.5). No keys are in the code.
