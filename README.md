@@ -4,7 +4,7 @@ An AI agent written in plain Java: a tabletop RPG games master that rolls dice, 
 
 It follows the idea of AWS's "Build your first AI agent" tutorial (Mike Chambers, which uses the Python Strands Agents SDK), but in Java and **without an agent framework**: I write the agentic loop myself on the AWS SDK for Java's Converse API, so every step the framework would hide is visible.
 
-**Status:** in progress (Step 1 of 5).
+**Status:** in progress (Step 2 of 5).
 
 ## What makes it an agent
 
@@ -25,7 +25,13 @@ It follows the idea of AWS's "Build your first AI agent" tutorial (Mike Chambers
 
 ## Build log
 
-_(one entry per step: what I built, what went wrong, what I learned)_
+### Step 1: the tools (done)
+Three plain Java classes the model will be able to call, with 13 JUnit tests written first:
+- `Dice`: rolls with a `Random` passed in, so tests can use a fixed seed and get repeatable rolls.
+- `RuleBook`: splits a text file into sections and returns the one that mentions a topic; a miss lists the sections so the model can try again. Loaded from `src/main/resources` with try-with-resources.
+- `Player`: HP, gold, spell slots and inventory. The state lives in Java, not in the model, because a model can't be trusted to remember numbers.
+
+What I got wrong first: my gold rule subtracted before checking, so a failed purchase wiped the player's gold. Fixed by validating before changing anything: refuse the transaction rather than half-do it.
 
 ## Run it
 
