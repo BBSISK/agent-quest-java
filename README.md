@@ -1,4 +1,5 @@
 # Agent Quest (Java)
+[![Tests](https://github.com/BBSISK/agent-quest-java/actions/workflows/ci.yml/badge.svg)](https://github.com/BBSISK/agent-quest-java/actions/workflows/ci.yml)
 
 An AI agent written in plain Java: a tabletop RPG games master that rolls dice, looks up rules and tracks the player's character, powered by a model on **Amazon Bedrock**.
 
