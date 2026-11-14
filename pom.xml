@@ -60,11 +60,11 @@
       <artifactId>mysql-connector-j</artifactId>
       <scope>runtime</scope>
     </dependency>
-    <!-- R3: an in-memory database for tests, so CI never needs AWS -->
+    <!-- R3: an in-memory database for tests (CI never needs AWS) and for the "local" profile (UI work without RDS) -->
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <scope>test</scope>
+      <scope>runtime</scope>
     </dependency>
     <!-- JUnit 5, MockMvc and friends -->
     <dependency>

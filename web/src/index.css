@@ -1,0 +1,13 @@
+:root {
+  --bg: #1b140f;
+  --panel: #2a2019;
+  --line: #4a3a2e;
+  --text: #efe4d2;
+  --muted: #b7a58f;
+  --accent: #e3a857;
+  color-scheme: dark;
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  color: var(--text);
+  background: var(--bg);
+}
+body { margin: 0; background: var(--bg); }
