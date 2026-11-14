@@ -94,6 +94,7 @@ public class Agent {
                     // results
                     String result = tools.run(use.name(), use.input());
                     toolLog.add(use.name() + " " + use.input() + " -> " + result);
+                    toolCalls.add(new ToolCall(use.name(), use.input().toString(), result));
                     results.add(toolResult(use, result));
                 }
             }
@@ -103,6 +104,19 @@ public class Agent {
         return "(The games master stopped after " + MAX_ROUNDS + " rounds of tool calls.)";
 
     }
+
+
+
+     public record ToolCall(String name, String input, String result) { }
+     private final List<ToolCall> toolCalls = new ArrayList<>();
+     public List<ToolCall> toolCalls() { return toolCalls; }
+     public void remember(String playerText, String reply) {
+         history.add(userText(playerText));
+         history.add(Message.builder()
+                 .role(ConversationRole.ASSISTANT)
+                 .content(ContentBlock.fromText(reply))
+                 .build());
+     }
 
     /** The tool calls made so far, oldest first (for printing, and for tests). */
     public List<String> toolLog() {

@@ -128,4 +128,29 @@ class AgentTest {
             assertTrue(!message.content().isEmpty(), "a " + message.role() + " message with no content was sent");
         }
     }
+
+    @Test
+    @DisplayName("R4a: each tool call is recorded with its name, input and result")
+    void toolCallsRecorded() {
+        ScriptedModel model = new ScriptedModel(List.of(askForTool("t1", "roll_dice", D20), answer("A 14!")));
+        Agent agent = agent(model);
+        agent.ask("I kick the door.");
+        assertEquals(1, agent.toolCalls().size());
+        assertEquals("roll_dice", agent.toolCalls().get(0).name());
+        assertTrue(agent.toolCalls().get(0).input().contains("sides"));
+        assertTrue(agent.toolCalls().get(0).result().startsWith("Rolled a d20: "));
+    }
+
+    @Test
+    @DisplayName("R4a: remember() puts an earlier turn back into history before the next question")
+    void rememberSeedsHistory() {
+        ScriptedModel model = new ScriptedModel(List.of(answer("Welcome back.")));
+        Agent agent = agent(model);
+        agent.remember("I bet 5 gold.", "You win!");
+        agent.ask("What happened?");
+        List<Message> sent = model.requests.get(0).messages();
+        assertEquals(3, sent.size());
+        assertEquals(ConversationRole.ASSISTANT, sent.get(1).role());
+        assertEquals("You win!", sent.get(1).content().get(0).text());
+    }
 }

@@ -5,7 +5,7 @@ An AI agent written in plain Java: a tabletop RPG games master that rolls dice, 
 
 It follows the idea of AWS's "Build your first AI agent" tutorial (Mike Chambers, which uses the Python Strands Agents SDK), but in Java and **without an agent framework**: I wrote the agentic loop myself on the AWS SDK for Java's Converse API, so every step a framework would hide is visible, and tested.
 
-**Status:** complete (5 of 5 steps), November 2026. 24 JUnit tests; a benchmark that scores two models on the same scripted game.
+**Status:** agent complete (5 of 5 steps), November 2026; now also a Spring Boot REST API that saves every game to MySQL on **Amazon RDS**. 44 JUnit tests, run on every push with no AWS needed; a benchmark that scores two models on the same scripted game.
 
 ## Result
 
@@ -23,6 +23,26 @@ What I take from it:
 - **An agent can say it did something without doing it.** The narration looked right; only the tool log showed the game state had not changed. Judge an agent on what it does.
 - **Small sample:** one run of 3 games per row. The 0/9 vs 9/9 gap is clear; the smaller differences are noise.
 - **A real model found a bug the tests didn't.** Haiku sometimes returns an empty reply. My loop added it to history, and Bedrock refused the next request (`content field ... is empty`, HTTP 400). Fixed with a placeholder message, and a test now covers it.
+
+## Saving games in a cloud database (Amazon RDS)
+
+Based on AWS's "Connect your app to a cloud database" tutorial (a Flask app on RDS), done in Java on this game instead: a Spring Boot 4.1 REST API, with every game saved to **MySQL 8.4 on Amazon RDS** after each turn.
+
+```
+POST /api/games                 start a game            -> {gameId, player}
+GET  /api/games/{id}            the player's state      -> {hp, maxHp, strength, spellSlots, gold, inventory}
+POST /api/games/{id}/turns      {"text": "I bet 5 gold on arm wrestling"}  -> {reply, toolCalls, player}
+```
+
+**The database** (`src/main/resources/schema.sql`): `games`, `player_state`, `inventory_items` (one row per item), `turns` (the story so far) and `tool_calls` (every tool the agent ran, kept for good). Foreign keys with `ON DELETE CASCADE`, and `CHECK` constraints that repeat the Java rules: gold and HP can't go negative, HP can't exceed the maximum. Checked by hand in MySQL Workbench: negative gold is refused (error 3819), a duplicate game id too (error 1062).
+
+**The Java side:** `GameRepository` uses Spring's `JdbcTemplate` with plain SQL and `?` placeholders (no SQL injection). A turn is saved in **one transaction**: the player's state, the turn and its tool calls all succeed or none are kept; a test proves a refused row leaves no half-made game. `GameService` keeps one agent per game in memory, but the database is the source of truth: after a restart, a game is rebuilt from it, and the earlier turns are given back to the agent so it remembers the story.
+
+**Proved live:** a bet on arm wrestling (rule looked up, two dice rolled, gold 10 -> 15, every tool call stored in `tool_calls`); the server was stopped and started again, and the same game came back from RDS with its gold.
+
+**Tests without AWS:** repository and service tests run against an in-memory H2 database (MySQL mode) built from the same `schema.sql`, with the scripted fake model, so CI never touches RDS or Bedrock.
+
+**Setup notes:** RDS Free tier template, `db.t4g.micro`, eu-west-1; public access on for learning, with the security group allowing MySQL (3306) only from my IP; the password comes from environment variables (`DB_HOST`, `DB_PASSWORD`), never from the code. The instance is stopped between sessions to save credits. In production it would stay private, reached through the VPC.
 
 ## What makes it an agent
 
@@ -82,5 +102,7 @@ mvn -q compile exec:java                                                        
 mvn -q compile exec:java -Dexec.mainClass=quest.Benchmark -Dexec.args="3"        # benchmark
 mvn -q compile exec:java -Dexec.mainClass=quest.Benchmark -Dexec.args="3 baseline"
 ```
+
+Web API with RDS: `export DB_HOST=<rds endpoint>` and `export DB_PASSWORD=...`, then `mvn spring-boot:run` and use the curl calls above.
 
 Bedrock calls use my `ask-barry` AWS profile, which assumes a least-privilege role allowed to call only two models in the EU (Nova 2 Lite and Claude Haiku 4.5). No keys are in the code.

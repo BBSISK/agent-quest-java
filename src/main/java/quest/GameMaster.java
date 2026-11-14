@@ -12,9 +12,9 @@ import software.amazon.awssdk.services.bedrockruntime.model.ConverseResponse;
 
 public class GameMaster {
 
-    static final String MODEL_ID = "eu.anthropic.claude-haiku-4-5-20251001-v1:0";   // Step 5: Haiku recorded every state change, Nova none
+    public static final String MODEL_ID = "eu.anthropic.claude-haiku-4-5-20251001-v1:0";   // Step 5: Haiku recorded every state change, Nova none
 
-    static final String SYSTEM_PROMPT = """
+    public static final String SYSTEM_PROMPT = """
             You are a dramatic and entertaining tabletop RPG games master.
             - Narrate vividly, in at most two short paragraphs.
             - Never say the player's HP, gold, items or spell slots changed unless you called update_player_state in this turn.

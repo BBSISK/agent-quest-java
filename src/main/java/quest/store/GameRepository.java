@@ -6,6 +6,7 @@ import javax.sql.DataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+import quest.agent.Agent;
 import quest.tools.PlayerState;
 
 /**
@@ -75,6 +76,40 @@ public class GameRepository {
                             gameId);
                     return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
                 }
+
+    /**
+     * R4. Save a finished turn: the player's state, the turn, and every tool the agent ran in it,
+     * all in ONE transaction. Done for you. (savePlayer joins this transaction rather than starting its own.)
+     */
+    public void saveTurn(String gameId, int turnNo, String playerText, String reply,
+                         List<Agent.ToolCall> calls, PlayerState state) {
+        transaction.executeWithoutResult(status -> {
+            savePlayer(gameId, state);
+            jdbc.update("INSERT INTO turns (game_id, turn_no, player_text, gm_reply) VALUES (?, ?, ?, ?)",
+                    gameId, turnNo, playerText, reply);
+            Integer turnId = jdbc.queryForObject(
+                    "SELECT id FROM turns WHERE game_id = ? AND turn_no = ?", Integer.class, gameId, turnNo);
+            int seq = 1;
+            for (Agent.ToolCall call : calls) {
+                jdbc.update("INSERT INTO tool_calls (turn_id, seq, tool_name, input, result) VALUES (?, ?, ?, ?, ?)",
+                        turnId, seq++, call.name(), call.input(), call.result());
+            }
+        });
+    }
+
+    /**
+     * R4b. A game's turns, oldest first, so a restarted server can remind the agent of the story so far.
+     *   SELECT turn_no, player_text, gm_reply FROM turns WHERE game_id = ? ORDER BY turn_no
+     * mapped to new TurnRecord(rs.getInt("turn_no"), rs.getString("player_text"), rs.getString("gm_reply")).
+     * Same shape as the second query in loadPlayer.
+     */
+    public List<TurnRecord> loadTurns(String gameId) {
+        return jdbc.query(
+                "SELECT turn_no, player_text, gm_reply FROM turns WHERE game_id = ? ORDER BY turn_no",
+                (rs, rowNum) -> new TurnRecord(rs.getInt("turn_no"), rs.getString("player_text"), rs.getString("gm_reply")),
+                gameId);
+
+    }
 
     private void insertItems(String gameId, List<String> items) {
         for (String item : items) {
