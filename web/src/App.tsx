@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { api } from './api'
 import type { PlayerState, ToolCall } from './api'
 import './App.css'
+import { CharacterCard } from './CharacterCard'
 
 // One entry in the story: what the player typed and how the games master answered.
 type Entry = { player: string; reply: string; toolCalls: ToolCall[] }
@@ -83,10 +84,8 @@ export default function App() {
         <div ref={storyEnd} />
       </main>
 
-      {/* W4a: replace this with <CharacterCard player={player} /> */}
       <aside className="side">
-        <h2>Character</h2>
-        <pre>{player ? JSON.stringify(player, null, 2) : 'Loading…'}</pre>
+        {player ? <CharacterCard player={player} /> : <p className="hint">Loading…</p>}
       </aside>
 
       <form className="input" onSubmit={send}>
