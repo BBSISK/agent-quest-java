@@ -153,4 +153,51 @@ class AgentTest {
         assertEquals(ConversationRole.ASSISTANT, sent.get(1).role());
         assertEquals("You win!", sent.get(1).content().get(0).text());
     }
+
+        static final String PAID = "You slide 5 gold across the counter to the barkeep.";
+
+    /** An agent whose Player we can inspect afterwards, with the state check switched on. */
+    static Agent checkedAgent(ScriptedModel model, Player player) {
+        ToolBox tools = new ToolBox(new Dice(new Random(3)), RuleBook.fromResource("/rulebook.txt"), player);
+        Agent agent = new Agent(model, "test-model", "You are a games master.", tools);
+        agent.enableStateCheck();
+        return agent;
+    }
+
+    @Test
+    @DisplayName("Guardrail: narrated a change without update_player_state -> the check makes the model record it")
+    void stateCheckCatchesNarratedChange() {
+        Player player = new Player();                                     // starts with 10 gold
+        ScriptedModel model = new ScriptedModel(List.of(
+                answer(PAID),                                             // narrates paying, no tool call
+                askForTool("u1", "update_player_state", ToolBoxTest.args("goldChange", -5)),
+                answer("DONE")));
+        Agent agent = checkedAgent(model, player);
+
+        assertEquals(PAID, agent.ask("I pay for a room."), "the player sees the story, not DONE");
+        assertEquals(3, model.requests.size());
+        String check = model.requests.get(1).messages().getLast().content().get(0).text();
+        assertTrue(check.contains("update_player_state"), check);
+        assertEquals(5, player.snapshot().gold());
+    }
+
+    @Test
+    @DisplayName("Guardrail: no check when the turn already called update_player_state")
+    void noCheckWhenStateUpdated() {
+        ScriptedModel model = new ScriptedModel(List.of(
+                askForTool("u1", "update_player_state", ToolBoxTest.args("goldChange", -5)),
+                answer(PAID)));
+        checkedAgent(model, new Player()).ask("I pay for a room.");
+        assertEquals(2, model.requests.size());
+    }
+
+    @Test
+    @DisplayName("Guardrail: nothing changed -> the model says DONE and nothing is updated")
+    void checkWithNoChange() {
+        Player player = new Player();
+        ScriptedModel model = new ScriptedModel(List.of(answer("The night is quiet."), answer("DONE")));
+        assertEquals("The night is quiet.", checkedAgent(model, player).ask("I listen."));
+        assertEquals(2, model.requests.size());
+        assertEquals(10, player.snapshot().gold());
+    }
 }

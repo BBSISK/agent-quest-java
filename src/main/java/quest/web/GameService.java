@@ -101,6 +101,7 @@ public class GameService {
         Player player = new Player(state);
         ToolBox tools = new ToolBox(new Dice(new Random()), RuleBook.fromResource("/rulebook.txt"), player);
         Agent agent = new Agent(model, modelId, systemPrompt, tools);
+        agent.enableStateCheck();
         for (TurnRecord turn : turns) {
             agent.remember(turn.playerText(), turn.gmReply());
         }

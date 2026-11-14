@@ -31,8 +31,14 @@ public class Agent {
     private final String modelId;
     private final String systemPrompt;
     private final ToolBox tools;
+    private boolean stateCheck = false;
     private final List<Message> history = new ArrayList<>(); // the whole conversation, sent every time
     private final List<String> toolLog = new ArrayList<>(); // "roll_dice {sides=20} -> Rolled a d20: 14"
+
+    public void enableStateCheck() { stateCheck = true; }
+
+    static final String STATE_CHECK = "Check your narration: did the player's HP, gold, items or spell slots change? "
+        + "If yes, call update_player_state now with the exact change. Then reply DONE.";
 
     public Agent(ModelClient model, String modelId, String systemPrompt, ToolBox tools) {
         this.model = model;
@@ -69,8 +75,18 @@ public class Agent {
      */
 
     public String ask(String userText) {
+        int before = toolCalls.size();  
         history.add(userText(userText));
+        String reply = runLoop();
+        if (stateCheck && toolCalls.subList(before, toolCalls.size()).stream()
+        .noneMatch(c -> c.name().equals("update_player_state"))) { 
+            history.add(userText(STATE_CHECK));
+        runLoop();
+        }
+        return reply;
+    }
 
+    private String runLoop() {
         for (int round = 1; round <= MAX_ROUNDS; round++) {
             ConverseResponse response = model.converse(request());
             Message reply = response.output().message();
@@ -102,10 +118,7 @@ public class Agent {
             history.add(Message.builder().role(ConversationRole.USER).content(results).build());
         }
         return "(The games master stopped after " + MAX_ROUNDS + " rounds of tool calls.)";
-
     }
-
-
 
      public record ToolCall(String name, String input, String result) { }
      private final List<ToolCall> toolCalls = new ArrayList<>();
