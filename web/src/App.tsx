@@ -7,6 +7,7 @@ import { CharacterCard } from './CharacterCard'
 import { DiceTray } from './DiceTray'
 import { parseRoll } from './dice'
 import type { Roll } from './dice'
+import { ActivityPanel } from './ActivityPanel'
 
 
 
@@ -76,7 +77,7 @@ export default function App() {
     setStory([])
     saveGame(game.gameId)
   }
-
+  const lastTurn = story.at(-1)
   return (
     <div className="layout">
       <header className="title">
@@ -99,6 +100,7 @@ export default function App() {
        <aside className="side">
         {player ? <CharacterCard player={player} /> : <p className="hint">Loading…</p>}
         {lastRoll && <DiceTray key={lastRoll.turn} roll={lastRoll.roll} />}
+        {lastTurn && <ActivityPanel calls={lastTurn.toolCalls} />}
       </aside>
 
       <form className="input" onSubmit={send}>

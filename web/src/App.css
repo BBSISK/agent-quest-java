@@ -25,7 +25,7 @@
 .you { margin: 0 0 6px; color: var(--accent); font-weight: 600; }
 .gm { margin: 0; white-space: pre-line; line-height: 1.55; }
 .hint { color: var(--muted); font-style: italic; }
-.input { grid-area: input; display: flex; gap: 8px; }
+.input { grid-area: input; display: flex; gap: 8px; align-self: start; }
 .input input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: inherit; font: inherit; }
 button { padding: 10px 16px; border-radius: 8px; border: none; background: var(--accent); color: #1b120b; font: inherit; font-weight: 700; cursor: pointer; }
 button:disabled { opacity: 0.5; cursor: default; }
@@ -79,3 +79,17 @@ button:disabled { opacity: 0.5; cursor: default; }
 @media (prefers-reduced-motion: reduce) {
   .die.rolling, .die.landed { animation: none; }
 }
+
+/* ---------- ActivityPanel ---------- */
+.activity { margin-top: 16px; background: var(--panel); border-radius: 12px; padding: 16px; }
+.activity h2 { margin: 0 0 10px; font-size: 1.1rem; }
+.activity ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.call { border-left: 3px solid var(--line); padding: 4px 0 4px 10px; font-size: 0.85rem; }
+.call .tool { font-family: ui-monospace, Menlo, monospace; font-weight: 700; }
+.call .input { font-family: ui-monospace, Menlo, monospace; color: var(--muted); margin-left: 6px; }
+.call .result { margin-top: 2px; }
+.call.roll_dice { border-color: #e3a857; }
+.call.update_player_state { border-color: #6fbf73; }
+.call.lookup_rule { border-color: #7f9cf5; }
+.call.get_player_state { border-color: #b7a58f; }
+.no-tools { margin: 0; color: #ff9b8a; font-size: 0.9rem; }
