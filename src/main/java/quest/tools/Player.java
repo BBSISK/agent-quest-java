@@ -12,18 +12,14 @@ import java.util.List;
 public class Player {
 
     private final String name = "Adventurer";
-    private final int maxHp = 20;
-    private final int strength = 3;
-    private int hp = 20;
-    private int spellSlots = 3;
-    private int gold = 10;
-    private final List<String> inventory = new ArrayList<>(List.of("rusty sword", "leather armor"));
+    private final int maxHp;
+    private final int strength;
+    private int hp;
+    private int spellSlots;
+    private int gold;
+    private final List<String> inventory;
 
-    // TODO 1: private fields. A new player is:
-    // name "Adventurer", hp 20, maxHp 20, strength 3, spellSlots 3, gold 10,
-    // inventory: a List<String> holding "rusty sword" and "leather armor".
-    // Hint: new ArrayList<>(List.of(...)) gives a list you can change; List.of
-    // alone can't be changed.
+
 
     /**
      * "Adventurer: HP 20/20, strength +3, spell slots 3, gold 10, inventory: rusty
@@ -37,6 +33,24 @@ public class Player {
                 inventory.isEmpty() ? "empty" : String.join(", ", inventory));
     }
 
+    /** A brand-new character. */
+    public Player() {
+        this(PlayerState.newCharacter());     // calls the other constructor
+    }
+
+    /** A character rebuilt from a saved snapshot. */
+    public Player(PlayerState saved) {
+        this.maxHp = saved.maxHp();
+        this.strength = saved.strength();
+        this.hp = saved.hp();
+        this.spellSlots = saved.spellSlots();
+        this.gold = saved.gold();
+        this.inventory = new ArrayList<>(saved.inventory());   // a copy you can change
+    }
+
+    public PlayerState snapshot() {
+        return new PlayerState(hp, maxHp, strength, spellSlots, gold, List.copyOf(inventory));
+    }
     /**
      * Apply one event's changes. Each change adds a phrase to a List<String>; join
      * them with "; ".

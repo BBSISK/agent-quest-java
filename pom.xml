@@ -50,6 +50,22 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>sts</artifactId>
     </dependency>
+    <!-- R3: SQL from Java (JdbcTemplate, transactions) and the MySQL driver for RDS -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- R3: an in-memory database for tests, so CI never needs AWS -->
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
     <!-- JUnit 5, MockMvc and friends -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
