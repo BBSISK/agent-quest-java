@@ -84,13 +84,51 @@
           <mainClass>quest.web.QuestApplication</mainClass>
         </configuration>
       </plugin>
-      <!-- mvn exec:java still runs the terminal game (and the Benchmark) -->
+      <!-- mvn exec:java still runs the terminal game (and the Benchmark).
+           W5: during `mvn package` it also builds the React page (npm run build -> web/dist). -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
+        <version>3.5.0</version>
         <configuration>
           <mainClass>${exec.mainClass}</mainClass>
         </configuration>
+        <executions>
+          <execution>
+            <id>build-web</id>
+            <!-- prepare-package runs after the tests, so `mvn test` (and CI) never needs Node -->
+            <phase>prepare-package</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <executable>npm</executable>
+              <workingDirectory>${project.basedir}/web</workingDirectory>
+              <arguments>
+                <argument>run</argument>
+                <argument>build</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- W5: copy web/dist into the jar as static/, so Spring serves the page at / -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-web</id>
+            <phase>prepare-package</phase>
+            <goals><goal>copy-resources</goal></goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.basedir}/web/dist</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
