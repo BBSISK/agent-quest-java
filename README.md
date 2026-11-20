@@ -42,7 +42,7 @@ POST /api/games/{id}/turns      {"text": "I bet 5 gold on arm wrestling"}  -> {r
 
 **Tests without AWS:** repository and service tests run against an in-memory H2 database (MySQL mode) built from the same `schema.sql`, with the scripted fake model, so CI never touches RDS or Bedrock.
 
-**Setup notes:** RDS Free tier template, `db.t4g.micro`, eu-west-1; public access on for learning, with the security group allowing MySQL (3306) only from my IP; the password comes from environment variables (`DB_HOST`, `DB_PASSWORD`), never from the code. The instance is stopped between sessions to save credits. In production it would stay private, reached through the VPC.
+**Setup notes:** RDS Free tier template, `db.t4g.micro`, eu-west-1; public access on for learning, with the security group allowing MySQL (3306) only from my IP; the password comes from environment variables (`DB_HOST`, `DB_PASSWORD`), never from the code. The instance was stopped between sessions to save credits, and deleted on 20 Nov 2026 once the live test was done; it can be rebuilt from `schema.sql` (local development now uses the `local` profile with in-memory H2). In production it would stay private, reached through the VPC.
 
 ## What makes it an agent
 
