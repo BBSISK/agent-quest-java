@@ -44,6 +44,14 @@ final class FakeModels {
                 ToolUseBlock.builder().toolUseId(id).name("update_player_state").input(input).build()).build());
     }
 
+        /** The model asks for set_location. */
+    static ConverseResponse askToMove(String id, String place, String kind) {
+        Document input = Document.fromMap(Map.of(
+                "place", Document.fromString(place), "kind", Document.fromString(kind)));
+        return response(StopReason.TOOL_USE, ContentBlock.builder().toolUse(
+                ToolUseBlock.builder().toolUseId(id).name("set_location").input(input).build()).build());
+    }
+
     static ConverseResponse response(StopReason stop, ContentBlock... content) {
         Message message = Message.builder().role(ConversationRole.ASSISTANT).content(content).build();
         return ConverseResponse.builder()

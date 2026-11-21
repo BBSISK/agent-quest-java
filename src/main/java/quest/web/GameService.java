@@ -8,10 +8,12 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import quest.agent.Agent;
 import quest.agent.ModelClient;
+import quest.agent.Suggestions;
 import quest.agent.ToolBox;
 import quest.store.GameRepository;
 import quest.store.TurnRecord;
 import quest.tools.Dice;
+import quest.tools.Journey;
 import quest.tools.Player;
 import quest.tools.PlayerState;
 import quest.tools.RuleBook;
@@ -24,17 +26,23 @@ import quest.tools.RuleBook;
 public class GameService {
 
     /** What one turn returns to the browser. */
-    public record TurnResult(String reply, List<Agent.ToolCall> toolCalls, PlayerState player) { }
+ //   public record TurnResult(String reply, List<Agent.ToolCall> toolCalls, PlayerState player) { }
+
+    public record TurnResult(String reply, List<Agent.ToolCall> toolCalls, PlayerState player,
+                         String place, String kind, List<String> visited, List<String> suggestions) { }
 
     private static final class Session {
         final Agent agent;
         final Player player;
         int turns;
+        final Journey journey;
+    
 
-        Session(Agent agent, Player player, int turns) {
+        Session(Agent agent, Player player, int turns, Journey journey) {
             this.agent = agent;
             this.player = player;
             this.turns = turns;
+            this.journey=journey;
         }
     }
 
@@ -73,12 +81,13 @@ public class GameService {
         Session s = found.get();
         synchronized (s) {                                   // one turn at a time per game
             int before = s.agent.toolCalls().size();
-            String reply = s.agent.ask(playerText);
+            String raw = s.agent.ask(playerText);
+            Suggestions parsed = Suggestions.split(raw);
             List<Agent.ToolCall> calls = List.copyOf(s.agent.toolCalls().subList(before, s.agent.toolCalls().size()));
             s.turns++;
             PlayerState state = s.player.snapshot();
-            repository.saveTurn(gameId, s.turns, playerText, reply, calls, state);
-            return Optional.of(new TurnResult(reply, calls, state));
+            repository.saveTurn(gameId, s.turns, playerText, parsed.story(), calls, state);
+            return Optional.of(new TurnResult(parsed.story(), calls, state, s.journey.place(), s.journey.kind(), s.journey.visited(), parsed.options()));
         }
     }
 
@@ -99,12 +108,13 @@ public class GameService {
 
     private Session open(PlayerState state, List<TurnRecord> turns) {
         Player player = new Player(state);
-        ToolBox tools = new ToolBox(new Dice(new Random()), RuleBook.fromResource("/rulebook.txt"), player);
+        Journey journey = new Journey();
+        ToolBox tools = new ToolBox(new Dice(new Random()), RuleBook.fromResource("/rulebook.txt"), player, journey);
         Agent agent = new Agent(model, modelId, systemPrompt, tools);
         agent.enableStateCheck();
         for (TurnRecord turn : turns) {
             agent.remember(turn.playerText(), turn.gmReply());
         }
-        return new Session(agent, player, turns.size());
+        return new Session(agent, player, turns.size(), journey);
     }
 }

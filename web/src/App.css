@@ -7,15 +7,17 @@
   grid-template-columns: minmax(0, 1fr) 300px;
   grid-template-areas:
     "title title"
+    "scene side"
     "story side"
     "input side"
+    "next side"
     "error error";
   gap: 16px;
   min-height: 100vh;
   box-sizing: border-box;
 }
 @media (max-width: 760px) {
-  .layout { grid-template-columns: 1fr; grid-template-areas: "title" "side" "story" "input" "error"; }
+  .layout { grid-template-columns: 1fr; grid-template-areas: "title" "scene" "side" "story" "input" "next" "error"; }
 }
 .title { grid-area: title; display: flex; justify-content: space-between; align-items: center; }
 .title h1 { margin: 0; font-size: 2rem; letter-spacing: 0.02em; }
@@ -93,3 +95,27 @@ button:disabled { opacity: 0.5; cursor: default; }
 .call.lookup_rule { border-color: #7f9cf5; }
 .call.get_player_state { border-color: #b7a58f; }
 .no-tools { margin: 0; color: #ff9b8a; font-size: 0.9rem; }
+
+/* ---------- F1-F3: scene, journey trail, welcome card, suggestion chips ---------- */
+.where { grid-area: scene; }
+.scene { margin: 0; position: relative; border-radius: 12px; overflow: hidden; animation: fade-in 0.6s ease; }
+.scene svg { display: block; width: 100%; height: 160px; }
+.scene figcaption {
+  position: absolute; left: 16px; bottom: 12px; padding: 4px 12px; border-radius: 999px;
+  background: rgba(27, 20, 15, 0.75); font-weight: 700; letter-spacing: 0.02em;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.trail { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; color: var(--muted); font-size: 0.9rem; }
+.trail li + li::before { content: "→"; margin-right: 6px; color: var(--line); }
+.trail li:last-child { color: var(--accent); font-weight: 700; }
+.welcome { background: var(--panel); border-radius: 12px; padding: 20px; }
+.welcome h2 { margin: 0 0 8px; }
+.welcome p { margin: 0 0 14px; line-height: 1.5; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 8px 14px; border-radius: 999px; border: 1px solid var(--accent); background: transparent;
+  color: var(--accent); font: inherit; font-weight: 600; cursor: pointer;
+}
+.chip:hover:not(:disabled) { background: var(--accent); color: #1b120b; }
+.next { grid-area: next; }
+@media (prefers-reduced-motion: reduce) { .scene { animation: none; } }

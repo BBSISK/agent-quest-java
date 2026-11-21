@@ -65,10 +65,19 @@ class ToolBoxTest {
         assertEquals("Unknown tool: summon_dragon", tools.run("summon_dragon", args()));
     }
 
-    @Test
-    @DisplayName("the model is told about exactly four tools")
-    void fourTools() {
-        assertEquals(4, tools.toolConfiguration().tools().size());
+        @Test
+    @DisplayName("J2: set_location moves the player and reports it")
+    void setLocation() {
+        String result = tools.run("set_location", args("place", "The Rusty Flagon", "kind", "tavern"));
+        assertEquals("Now at The Rusty Flagon (tavern)", result);
+        assertEquals("The Rusty Flagon", tools.journey().place());
+        assertEquals("tavern", tools.journey().kind());
+    }
+
+     @Test
+    @DisplayName("the model is told about exactly five tools")
+    void fiveTools() {
+        assertEquals(5, tools.toolConfiguration().tools().size());
         assertEquals("roll_dice", tools.toolConfiguration().tools().get(0).toolSpec().name());
     }
 }

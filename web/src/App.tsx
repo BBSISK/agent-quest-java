@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { api } from './api'
-import type { PlayerState, ToolCall } from './api'
+import type { PlayerState, TurnResult } from './api'
 import './App.css'
 import { CharacterCard } from './CharacterCard'
 import { DiceTray } from './DiceTray'
 import { parseRoll } from './dice'
 import type { Roll } from './dice'
 import { ActivityPanel } from './ActivityPanel'
+import { SceneBanner } from './SceneBanner'
+import { WelcomeCard } from './WelcomeCard'
+
 
 
 
 // One entry in the story: what the player typed and how the games master answered.
-type Entry = { player: string; reply: string; toolCalls: ToolCall[] }
+type Entry = TurnResult & { player: string }
 
 const GAME_KEY = 'agent-quest-game-id'
 
@@ -46,21 +49,24 @@ export default function App() {
     storyEnd.current?.scrollIntoView({ behavior: 'smooth' })
   }, [story])
 
-  async function send(event: FormEvent) {
+  function send(event: FormEvent) {
     event.preventDefault()
-    const action = text.trim()
+    play(text.trim())
+  }
+
+  async function play(action: string) {
     if (!gameId || !action || busy) return
     setBusy(true)
     setError(null)
     try {
       const result = await api.turn(gameId, action)
-            const roll = result.toolCalls
+      const roll = result.toolCalls
         .filter((c) => c.name === 'roll_dice')
         .map((c) => parseRoll(c.result))
         .filter((r) => r !== null)
         .at(-1)
       setLastRoll(roll ? { roll, turn: story.length } : null)
-      setStory((s) => [...s, { player: action, reply: result.reply, toolCalls: result.toolCalls }])
+      setStory((s) => [...s, { ...result, player: action }])
       setPlayer(result.player)
       setText('')
     } catch {
@@ -78,15 +84,20 @@ export default function App() {
     saveGame(game.gameId)
   }
   const lastTurn = story.at(-1)
+  const where = lastTurn ?? { place: 'Village', kind: 'village', visited: ['Village'] }
   return (
     <div className="layout">
       <header className="title">
+        <section className="where">
+          <SceneBanner kind={where.kind} place={where.place} />
+          <ol className="trail">{where.visited.map((p, i) => <li key={i}>{p}</li>)}</ol>
+        </section>
         <h1>Agent Quest</h1>
         <button type="button" onClick={newGame} disabled={busy}>New game</button>
       </header>
 
       <main className="story" aria-live="polite">
-        {story.length === 0 && <p className="hint">You arrive at a small village at dusk. What do you do?</p>}
+                {story.length === 0 && <WelcomeCard onPick={play} disabled={!gameId || busy} />}
         {story.map((entry, i) => (
           <article key={i} className="turn">
             <p className="you">{entry.player}</p>
@@ -97,7 +108,7 @@ export default function App() {
         <div ref={storyEnd} />
       </main>
 
-       <aside className="side">
+      <aside className="side">
         {player ? <CharacterCard player={player} /> : <p className="hint">Loading…</p>}
         {lastRoll && <DiceTray key={lastRoll.turn} roll={lastRoll.roll} />}
         {lastTurn && <ActivityPanel calls={lastTurn.toolCalls} />}
@@ -106,9 +117,18 @@ export default function App() {
       <form className="input" onSubmit={send}>
         <label htmlFor="action" className="visually-hidden">Your action</label>
         <input id="action" value={text} onChange={(e) => setText(e.target.value)} maxLength={500}
-               placeholder="I bet 5 gold that I can beat the blacksmith at arm wrestling" disabled={!gameId || busy} />
+          placeholder="I bet 5 gold that I can beat the blacksmith at arm wrestling" disabled={!gameId || busy} />
         <button type="submit" disabled={!gameId || busy || !text.trim()}>Act</button>
       </form>
+
+      {lastTurn && lastTurn.suggestions.length > 0 && (
+        <div className="chips next">
+          {lastTurn.suggestions.map((s) => (
+            <button type="button" className="chip" key={s} onClick={() => play(s)} disabled={busy}>{s}</button>
+          ))}
+        </div>
+      )}
+
 
       {error && <p className="error" role="alert">{error}</p>}
     </div>

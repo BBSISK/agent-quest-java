@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Random;
 
 import quest.tools.Dice;
+import quest.tools.Journey;
 import quest.tools.Player;
 import quest.tools.RuleBook;
 import software.amazon.awssdk.core.document.Document;
@@ -27,17 +28,27 @@ public class ToolBox {
     private final Dice dice;
     private final RuleBook ruleBook;
     private final Player player;
+    private final Journey journey;
 
-    public ToolBox(Dice dice, RuleBook ruleBook, Player player) {
-        this.dice = dice;
-        this.ruleBook = ruleBook;
-        this.player = player;
-    }
 
     /** The real tools: random dice, the rule book from resources, a new player. */
     public static ToolBox standard() {
         return new ToolBox(new Dice(new Random()), RuleBook.fromResource("/rulebook.txt"), new Player());
     }
+
+    public ToolBox(Dice dice, RuleBook ruleBook, Player player) {
+    this(dice, ruleBook, player, new Journey());
+    }
+
+        public ToolBox(Dice dice, RuleBook ruleBook, Player player, Journey journey) {
+        this.dice = dice;
+        this.ruleBook = ruleBook;
+        this.player = player;
+        this.journey = journey;
+    }
+
+    public Journey journey() { return journey; }
+
 
     /**
      * Step 3a. Run the tool the model asked for and return its result as text.
@@ -54,7 +65,7 @@ public class ToolBox {
      * Hint: a switch on a String works:  switch (name) { case "roll_dice": return ...; ... default: return ...; }
      */
     public String run(String name, Document input) {
-        // TODO 3a
+
 
         switch (name) {
         case "roll_dice":
@@ -71,7 +82,12 @@ public class ToolBox {
             stringArg(input, "addItem", ""),
             stringArg(input, "removeItem", ""),
             boolArg(input, "useSpellSlot", false));     
-        default:
+        case "set_location":
+        return journey.moveTo(
+            stringArg(input,"place","somewhere"),
+            stringArg(input,"kind","road")
+            );    
+            default:
         return "Unknown tool: " + name;
         }   
     }   
@@ -94,7 +110,11 @@ public class ToolBox {
                                 "goldChange", "integer", "Gold change: negative to spend or lose, positive to gain",
                                 "addItem", "string", "An item to add to the inventory",
                                 "removeItem", "string", "An item to remove from the inventory",
-                                "useSpellSlot", "boolean", "true to use up one spell slot"))
+                                "useSpellSlot", "boolean", "true to use up one spell slot")),
+                tool("set_location", "Record where the player is whenever they move somewhere new.",
+                        schema(List.of("place", "kind"),
+                                "place", "string", "The place's name, e.g. 'The Rusty Flagon'",
+                                "kind", "string", "One of: village, tavern, market, forest, road, cave, castle, temple"))                
         )).build();
     }
 

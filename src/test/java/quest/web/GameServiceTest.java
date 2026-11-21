@@ -98,4 +98,22 @@ class GameServiceTest {
         assertTrue(games.player("no-such-game").isEmpty());
         assertTrue(games.play("no-such-game", "hello").isEmpty());
     }
+
+        @Test
+    @DisplayName("J4: a turn reports the place, the trail and the suggestions, and the story loses the SUGGESTIONS line")
+    void locationAndSuggestions() {
+        GameService games = service(new FakeModels.Scripted(List.of(
+                FakeModels.askToMove("m1", "The Rusty Flagon", "tavern"),
+                FakeModels.answer("You step inside.\nSUGGESTIONS: Order an ale | Leave"),
+                FakeModels.answer("DONE"))));                     // the guardrail's check: nothing changed
+        String id = games.newGame();
+
+        GameService.TurnResult r = games.play(id, "I go into the tavern.").orElseThrow();
+
+        assertEquals("You step inside.", r.reply());
+        assertEquals(List.of("Order an ale", "Leave"), r.suggestions());
+        assertEquals("The Rusty Flagon", r.place());
+        assertEquals("tavern", r.kind());
+        assertEquals(List.of("Village", "The Rusty Flagon"), r.visited());
+    }
 }

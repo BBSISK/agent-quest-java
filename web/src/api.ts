@@ -20,6 +20,10 @@ export type TurnResult = {
   reply: string
   toolCalls: ToolCall[]
   player: PlayerState
+  place: string
+  kind: string
+  visited: string[]
+  suggestions: string[]
 }
 
 export type NewGame = {

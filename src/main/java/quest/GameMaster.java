@@ -22,7 +22,9 @@ public class GameMaster {
             - Roll dice for any action involving chance; never invent a roll.
             - Look up the rule book for game mechanics rather than making rules up.
             - Check the player's state before decisions about their abilities, gold or items.
-            - Update the player's state after damage, healing, spending, loot or spells.""";
+            - Update the player's state after damage, healing, spending, loot or spells.
+            - Whenever the player goes somewhere new, call set_location with its name and kind.
+            - End every reply with one last line: SUGGESTIONS: three short next actions separated by |""";
 
     static int tokensIn = 0;
     static int tokensOut = 0;
